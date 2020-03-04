@@ -1,5 +1,5 @@
 [package]
-name = "highspot"
+name = "hook-recorder"
 version = "0.1.0"
 authors = ["Nicholas Harring <nharring@gmail.com>"]
 edition = "2018"
