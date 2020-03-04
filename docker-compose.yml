@@ -1,0 +1,59 @@
+version: "3.7"
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: demo_app_pass
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - backend
+  highspot:
+    build:
+      context: .
+      cache_from:
+        - ekidd/rust-musl-builder
+      args:
+        - DATABASE_URL=postgres://postgres:demo_app_pass@db/postgres
+    depends_on:
+      - db
+    environment:
+      RUST_LOG: 'debug'
+    networks:
+      - backend
+      - default
+    ports:
+      - "3030:3030"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3030/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 2
+      start_period: 5s
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 30M
+        reservations:
+          cpus: '1.05'
+          memory: 20M
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 5m
+        order: start-first
+volumes:
+  db-data:
+    external: true
+
+networks:
+  backend:
+    driver: bridge

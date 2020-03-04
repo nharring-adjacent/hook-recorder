@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Webhook from {{systime upload_time}}</title>
+</head>
+
+<body>
+    <div class="container is-fluid">
+        <div class="tile is-ancestor is-vertical">
+            <div class="tile is-parent is-8 is-vertical box">
+                <article class="tile is-child notification is-primary">
+                    <p class="title has-text-centered has-text-black-ter">Post metadata</p>
+                </article>
+                <div class="tile is-child box">
+                    <ul>
+                        <li class="has-text-black-ter">id: {{id}}</li>
+                        <li class="has-text-black-ter">upload_time: {{systime upload_time}}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tile is-parent is-8 is-vertical box">
+                <article class="tile is-child notification is-primary">
+                    <p class="title has-text-centered has-text-black-ter">Headers</p>
+                </article>
+                <div class="tile is-child box">
+                    <p class="has-text-black-ter"> {{headers}}</p>
+                </div>
+            </div>
+
+            <div class="tile is-parent is-8 is-vertical box">
+                <article class="tile is-child notification is-primary">
+                    <p class="title has-text-centered has-text-black-ter">Webhook body</p>
+                </article>
+                <div class="tile is-child box">
+                    <p class="has-text-black-ter">{{body}}</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>
