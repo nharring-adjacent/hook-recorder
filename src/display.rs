@@ -2,6 +2,7 @@ extern crate chrono;
 extern crate diesel;
 use super::model::*;
 use super::schema::webhooks::dsl::*;
+use super::templating::Templater;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
@@ -11,10 +12,10 @@ use quanta::Clock;
 use std::convert::Infallible;
 use std::convert::TryInto;
 use std::mem;
-use super::templating::TemplateSingleton;
 
 pub async fn display_last(
-    pool: r2d2::Pool<ConnectionManager<PgConnection>>, templater: TemplateSingleton,
+    pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+    templater: Templater,
 ) -> Result<impl warp::Reply, Infallible> {
     let clock = Clock::new();
     debug!("Beginning display request");

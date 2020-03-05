@@ -1,4 +1,4 @@
-use super::templating::TemplateSingleton;
+use super::templating::Templater;
 use super::{display, healthcheck, record};
 use diesel::{pg::PgConnection, r2d2::ConnectionManager};
 use log::debug;
@@ -6,16 +6,17 @@ use warp::Filter;
 
 pub fn gen_filters(
     pool: r2d2::Pool<ConnectionManager<PgConnection>>,
-    templater: TemplateSingleton,
+    templater: Templater,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'static {
     debug!("Beginning filter intialization");
     gen_display(pool.clone(), templater.clone())
         .or(gen_record(pool.clone()))
-        .or(gen_healthcheck(pool.clone(), templater.clone()))
+        .or(gen_healthcheck(pool, templater))
 }
 
 fn gen_display(
-    pool: r2d2::Pool<ConnectionManager<PgConnection>>, templater: TemplateSingleton,
+    pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+    templater: Templater,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'static {
     debug!("Initializing display filter");
     warp::path!("display")
@@ -38,7 +39,8 @@ fn gen_record(
 }
 
 fn gen_healthcheck(
-    pool: r2d2::Pool<ConnectionManager<PgConnection>>, templater: TemplateSingleton,
+    pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+    templater: Templater,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'static {
     debug!("Initializing healthcheck filter");
     warp::path!("healthcheck")
@@ -59,12 +61,10 @@ fn with_db(
 }
 
 fn with_templater(
-    templater: TemplateSingleton,
-) -> impl Filter<Extract = (TemplateSingleton,), Error = std::convert::Infallible> + Clone + 'static
-{
+    templater: Templater,
+) -> impl Filter<Extract = (Templater,), Error = std::convert::Infallible> + Clone + 'static {
     warp::any().map(move || templater.clone())
 }
-
 
 // #[cfg(test)]
 

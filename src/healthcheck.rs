@@ -1,15 +1,15 @@
 extern crate chrono;
 extern crate diesel;
 extern crate handlebars;
+use super::templating::Templater;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use log::debug;
 use metrics::{counter, timing};
 use quanta::Clock;
 use serde::{Deserialize, Serialize};
-use std::convert::{Infallible};
+use std::convert::Infallible;
 use std::time::Duration;
-use super::templating::TemplateSingleton;
 
 #[derive(Serialize, Deserialize)]
 struct HealthcheckPayload {
@@ -23,7 +23,8 @@ struct HealthcheckPayload {
 }
 
 pub async fn healthcheck(
-    pool: r2d2::Pool<ConnectionManager<PgConnection>>, templater: TemplateSingleton,
+    pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+    templater: Templater,
 ) -> Result<impl warp::Reply, Infallible> {
     debug!("Healthcheck called");
     let clock = Clock::new();
@@ -35,10 +36,7 @@ pub async fn healthcheck(
         (clock.delta(check_start, check_end) / 1000) / 1000
     );
     counter!("healthcheck.db_state.conns", payload.conns.into());
-    counter!(
-        "healthcheck.db_state.idle_conns",
-        payload.idle_conns.into()
-    );
+    counter!("healthcheck.db_state.idle_conns", payload.idle_conns.into());
     let html = templater.hb.render("healthcheck.html", &payload);
     Ok(warp::reply::html(
         html.unwrap_or_else(|err| err.to_string()),
@@ -47,12 +45,9 @@ pub async fn healthcheck(
 
 fn _do_check_health(pool: r2d2::Pool<ConnectionManager<PgConnection>>) -> HealthcheckPayload {
     let state = pool.state();
-    let mut healthy = false;
-    if state.connections > 0 && state.idle_connections > 0 {
-        healthy = true;
-    }
+    let healthy = state.connections > 0 && state.idle_connections > 0;
     HealthcheckPayload {
-        healthy: healthy,
+        healthy,
         conns: state.connections,
         idle_conns: state.idle_connections,
         max_conns: pool.max_size(),
