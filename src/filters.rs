@@ -64,3 +64,13 @@ fn with_templater(
 {
     warp::any().map(move || templater.clone())
 }
+
+
+// #[cfg(test)]
+
+// #[test]
+// fn test_display_matching() {
+
+//     let filter = gen_display(pool, templater);
+//     let value = warp::test::request().path("/display").filter();
+// }
