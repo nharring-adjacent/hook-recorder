@@ -37,8 +37,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-// embed_migrations!();
-
 #[tokio::main(core_threads = 5)]
 async fn main() -> Result<(), Error> {
     pretty_env_logger::init();
@@ -54,19 +52,8 @@ async fn main() -> Result<(), Error> {
     // Setup metrics facade and logexporter
     init_logging(&config);
     let templater = Templater::new();
-    // let (tx, rx) = oneshot::channel();
-    // let listen_addr = SocketAddr::new(config.listen_addr, config.listen_port);
-    // let (addr, server) = warp::serve(filters::gen_filters(pool, templater))
-    //     .bind_with_graceful_shutdown(listen_addr, async {
-    //         rx.await.ok();
-    //     });
-    // info!(
-    //     "Created server on {}, preparing to spawn onto background thread",
-    //     addr
-    // );
     let tx = server::spawn_server(db, config, templater);
     timing!("init.time_to_serve", clock.delta(init_start, clock.end()));
-    // tokio::spawn(server);
     info!("Server task spawned, entering runloop waiting for Ctrl-C");
     // Now that everything important is off the main thread we can begin spinning
     // watching for signal delivery via our atomic bool
