@@ -1,5 +1,5 @@
 # Hook-Recorder
-[![Build Status](https://travis-ci.com/nharring/hook-recorder.svg?branch=master)](https://travis-ci.com/nharring/hook-recorder)
+[![Build Status](https://travis-ci.com/nharring/hook-recorder.svg?branch=master)](https://travis-ci.com/nharring/hook-recorder) [![codecov](https://codecov.io/gh/nharring/hook-recorder/branch/master/graph/badge.svg)](https://codecov.io/gh/nharring/hook-recorder)
 
 Simple webhook recorder written in rust which persists records to a postgres database and has a display endpoint which shows the headers and body for the most recently recorded hook.
 
