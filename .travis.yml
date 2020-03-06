@@ -11,9 +11,6 @@ before_install:
   - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
 
 matrix:
-  allow_failures:
-    - rust: nightly
-  fast_finish: true
   include:
   - stage: Coverage
     script:
@@ -22,7 +19,7 @@ matrix:
       - cargo build $CARGO_OPTIONS
       - cargo test --verbose $CARGO_OPTIONS
       - |
-        zip -0 ccov.zip `find . \( -name "rksuid*.gc*" \) -print`;
+        zip -0 ccov.zip `find . \( -name "hook-recorder*.gc*" \) -print`;
         ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info;
         bash <(curl -s https://codecov.io/bash) -f lcov.info;
     rust: nightly
