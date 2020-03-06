@@ -2,8 +2,13 @@ extern crate handlebars;
 use chrono::NaiveDateTime;
 use handlebars::{Context, Handlebars, Helper, HelperResult, Output, RenderContext, RenderError};
 use log::debug;
+use rust_embed::RustEmbed;
 use std::sync::Arc;
 use std::time::Duration;
+
+#[derive(RustEmbed)]
+#[folder = "src/templates/"]
+struct Templates;
 
 #[derive(Debug, Clone, Default)]
 pub struct Templater {
@@ -16,10 +21,16 @@ impl Templater {
         debug!("Creating template singleton");
         let mut reg = Handlebars::new();
         debug!("Registering template files");
-        reg.register_template_file("display.html", "src/templates/display.html")
-            .expect("Failed to register display.html");
-        reg.register_template_file("healthcheck.html", "src/templates/healthcheck.html")
-            .expect("Failed to register healthcheck.html");
+        reg.register_template_string(
+            "display.html",
+            std::str::from_utf8(Templates::get("display.html").unwrap().as_ref())
+                .expect("Failed to load display.html"),
+        ).expect("Failed to register display template");
+        reg.register_template_string(
+            "healthcheck.html",
+            std::str::from_utf8(Templates::get("healthcheck.html").unwrap().as_ref())
+                .expect("Failed to load healthcheck.html"),
+        ).expect("Failed to register healthcheck template");
         debug!("Registering template helpers");
         reg.register_helper("duration", Box::new(Templater::duration_helper));
         reg.register_helper("systime", Box::new(Templater::systime_helper));

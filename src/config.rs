@@ -11,6 +11,8 @@ pub struct AppConfig {
     pub listen_addr: IpAddr,
     pub listen_port: u16,
     pub stats_interval: Duration,
+    pub enable_stats_logger: bool,
+    pub http_stats_port: u16,
 }
 
 impl AppConfig {
@@ -48,12 +50,24 @@ impl AppConfig {
             .parse::<u64>()
             .unwrap();
         let stats_interval = Duration::from_secs(stats_seconds);
+        let enable_stats_logger = vars_map
+            .get("ENABLE_STATS_LOGGER")
+            .unwrap_or(&"false".to_string())
+            .parse::<bool>()
+            .unwrap();
+        let http_stats_port = vars_map
+            .get("HTTP_STATS_PORT")
+            .unwrap_or(&"3031".to_string())
+            .parse::<u16>()
+            .unwrap();
         AppConfig {
             db_url,
             max_conns,
             listen_addr,
             listen_port,
             stats_interval,
+            enable_stats_logger,
+            http_stats_port,
         }
     }
 }
@@ -66,6 +80,8 @@ pub fn test_ipv4_get_config() {
         listen_addr: "5.4.3.2".to_string().parse().unwrap(),
         listen_port: 4321,
         stats_interval: Duration::from_secs(888),
+        enable_stats_logger: false,
+        http_stats_port: 4322,
     };
     let mut mock_env = HashMap::new();
     mock_env.insert(
@@ -76,6 +92,8 @@ pub fn test_ipv4_get_config() {
     mock_env.insert("STATS_INTERVAL".to_string(), "888".to_string());
     mock_env.insert("LISTEN_PORT".to_string(), "4321".to_string());
     mock_env.insert("LISTEN_IP".to_string(), "5.4.3.2".to_string());
+    mock_env.insert("ENABLE_STATS_LOGGER".to_string(), "false".to_string());
+    mock_env.insert("HTTP_STATS_PORT".to_string(), "4322".to_string());
     let config = AppConfig::new(&mut mock_env.into_iter());
     assert_eq!(expected, config);
 }
@@ -91,6 +109,8 @@ pub fn test_ipv6_get_config() {
             .unwrap(),
         listen_port: 4321,
         stats_interval: Duration::from_secs(888),
+        enable_stats_logger: false,
+        http_stats_port: 4322,
     };
     let mut mock_env = HashMap::new();
     mock_env.insert(
@@ -104,6 +124,8 @@ pub fn test_ipv6_get_config() {
         "LISTEN_IP".to_string(),
         "2001:0db8:85a3:0000:0000:8a2e:0370:7334".to_string(),
     );
+    mock_env.insert("ENABLE_STATS_LOGGER".to_string(), "false".to_string());
+    mock_env.insert("HTTP_STATS_PORT".to_string(), "4322".to_string());
     let config = AppConfig::new(&mut mock_env.into_iter());
     assert_eq!(expected, config);
 }

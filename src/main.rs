@@ -27,17 +27,20 @@ use db::DbFacade;
 use templating::Templater;
 
 use log::Level;
-use log::{info, warn};
+use log::{debug, info, warn};
 use metrics::timing;
-use metrics_runtime::{exporters::LogExporter, observers::YamlBuilder, Receiver};
+use metrics_runtime::{
+    exporters::HttpExporter, exporters::LogExporter, observers::YamlBuilder, Receiver,
+};
 use quanta::Clock;
 use std::env;
 use std::io::Error;
+use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-#[tokio::main(core_threads = 5)]
+#[tokio::main]
 async fn main() -> Result<(), Error> {
     pretty_env_logger::init();
     let clock = Clock::new();
@@ -51,15 +54,15 @@ async fn main() -> Result<(), Error> {
 
     // Setup metrics facade and logexporter
     init_logging(&config);
-    let templater = Templater::new();
-    let tx = server::spawn_server(db, config, templater);
+
+    // The return here is a transmit handle to signal shutdown of the warp server
+    let tx = server::spawn_server(db, config, Templater::new());
     timing!("init.time_to_serve", clock.delta(init_start, clock.end()));
-    info!("Server task spawned, entering runloop waiting for Ctrl-C");
-    // Now that everything important is off the main thread we can begin spinning
-    // watching for signal delivery via our atomic bool
+    info!("Server task spawned, entering runloop waiting for shutdown signal");
+    // Now that everything important is running asynchronously on a threadpool
+    // we can spin waiting for shutdown
     while !term.load(Ordering::Relaxed) {
-        // ONLY DO PROVABLY SHORT DURATION TIME-BOUNDED WORK INSIDE THIS LOOP
-        // ANY TIME SPENT BLOCKED INSIDE THIS LOOP RISKS PREVENTING SIGNAL PROCESSING
+        // DO NOT DO ANY WORK INSIDE THIS LOOP OR YOU RISK INTERFERING WITH SIGNALS
     }
     warn!("Caught shutdown signal!");
     info!("Waiting at most 1 second for requests to finish");
@@ -74,15 +77,32 @@ fn init_logging(config: &AppConfig) {
     let receiver = Receiver::builder()
         .build()
         .expect("Must be able to build metrics receiver");
-    let exporter = LogExporter::new(
+    let log_exporter = LogExporter::new(
         receiver.controller(),
         YamlBuilder::new(),
         Level::Info,
         config.stats_interval,
     );
+    let http_exporter = HttpExporter::new(
+        receiver.controller(),
+        YamlBuilder::new(),
+        SocketAddr::new(config.listen_addr, config.http_stats_port),
+    );
     receiver.install();
+    if config.enable_stats_logger {
+        debug!("Spawning stats logger onto threadpool");
+        tokio::spawn(async move {
+            log_exporter.async_run().await;
+        });
+    } else {
+        debug!("Stats logging disabled.");
+    }
+    debug!("Spawning http stats exporter onto threadpool");
     tokio::spawn(async move {
-        exporter.async_run().await;
+        http_exporter
+            .async_run()
+            .await
+            .expect("Stat request exploded");
     });
 }
 

@@ -1,13 +1,11 @@
 # Dockerfile for creating a statically-linked Rust application using docker's
-# multi-stage build feature. This also leverages the docker build cache to avoid
-# re-downloading dependencies if they have not changed.
-#FROM registry.gitlab.com/rust_musl_docker/image:stable-latest as build
+# multi-stage build feature allowing for very small final containers
 FROM ekidd/rust-musl-builder:stable-openssl11 as build
 
 ADD --chown=rust:rust . ./
-
 RUN cargo build --release
-# # Copy the statically-linked binary into an alpine linux container for execution.
+# Copy the statically-linked binary into a slimmed down container for execution.
+# Use alpine if you need in-container debugging
 # FROM alpine
 FROM scratch
 COPY --from=build /home/rust/src/target/x86_64-unknown-linux-musl/release/hook-recorder /usr/local/bin/
