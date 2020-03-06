@@ -10,7 +10,10 @@ script:
 before_install:
   - curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
 
-jobs:
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
   include:
   - stage: Coverage
     script:
@@ -23,8 +26,3 @@ jobs:
         ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info;
         bash <(curl -s https://codecov.io/bash) -f lcov.info;
     rust: nightly
-
-matrix:
-  allow_failures:
-    - rust: nightly
-  fast_finish: true
