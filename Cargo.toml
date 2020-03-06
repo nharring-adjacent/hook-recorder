@@ -25,8 +25,11 @@ diesel_migrations = "1.4.0"
 openssl = "0.10"
 rust-embed="5.5.0"
 
+
 [dev-dependencies]
 mockall = "0.6.0"
 
 [profile.release]
-lto = "thin"
+lto = "fat"
+panic = "abort"
+codegen-units = 1
