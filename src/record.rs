@@ -15,6 +15,7 @@ pub async fn record_webhook(
     pool: r2d2::Pool<ConnectionManager<PgConnection>>,
     body_bytes: bytes::Bytes,
     header_map: HeaderMap,
+    tag: Option<String>,
 ) -> Result<impl warp::Reply, Infallible> {
     let clock = Clock::new();
     let type_coercion_start = clock.start();
@@ -41,7 +42,7 @@ pub async fn record_webhook(
         "record.record_webhook.type_coercion",
         (clock.delta(type_coercion_start, type_coercion_end) / 1000) / 1000
     );
-    let result = _do_record_webhook(&pool.get().unwrap(), &headers, &body);
+    let result = _do_record_webhook(&pool.get().unwrap(), &headers, &body, tag);
 
     if result.upload_time.timestamp() > 0 {
         Ok(StatusCode::OK)
@@ -55,10 +56,11 @@ fn _do_record_webhook(
     conn: &PooledConnection<ConnectionManager<PgConnection>>,
     headers: &str,
     body: &str,
+    tag_val: Option<String>,
 ) -> Webhook {
     use super::schema::webhooks;
-
-    let newdoc = NewWebhook { headers, body };
+    let tag = tag_val.as_deref();
+    let newdoc = NewWebhook { headers, body, tag };
 
     diesel::insert_into(webhooks::table)
         .values(&newdoc)

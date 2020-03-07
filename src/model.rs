@@ -7,6 +7,7 @@ pub struct Webhook {
     pub headers: String,
     pub body: String,
     pub upload_time: NaiveDateTime,
+    pub tag: Option<String>,
 }
 
 use super::schema::webhooks;
@@ -15,4 +16,5 @@ use super::schema::webhooks;
 pub struct NewWebhook<'a> {
     pub headers: &'a str,
     pub body: &'a str,
+    pub tag: Option<&'a str>,
 }

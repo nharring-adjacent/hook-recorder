@@ -11,6 +11,7 @@ pub fn gen_filters(
     debug!("Beginning filter intialization");
     gen_display(pool.clone(), templater.clone())
         .or(gen_record(pool.clone()))
+        .or(gen_record_tagged(pool.clone()))
         .or(gen_healthcheck(pool, templater))
 }
 
@@ -26,6 +27,7 @@ fn gen_display(
         .and_then(display::display_last)
 }
 
+// POST /record
 fn gen_record(
     pool: r2d2::Pool<ConnectionManager<PgConnection>>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'static {
@@ -35,7 +37,21 @@ fn gen_record(
         .and(warp::body::bytes())
         .and(warp::header::headers_cloned())
         .and(with_db(pool))
-        .and_then(|body, headers, pool| record::record_webhook(pool, body, headers))
+        .and_then(|body, headers, pool| record::record_webhook(pool, body, headers, None))
+}
+
+// POST /record/:string
+fn gen_record_tagged(
+    pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'static {
+    debug!("Initializing record filter");
+    warp::path!("record")
+        .and(warp::path::param())
+        .and(warp::post())
+        .and(warp::body::bytes())
+        .and(warp::header::headers_cloned())
+        .and(with_db(pool))
+        .and_then(|tag, body, headers, pool| record::record_webhook(pool, body, headers, Some(tag)))
 }
 
 fn gen_healthcheck(

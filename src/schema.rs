@@ -4,5 +4,6 @@ table! {
         headers -> Text,
         body -> Text,
         upload_time -> Timestamp,
+        tag -> Nullable<Varchar>,
     }
 }
