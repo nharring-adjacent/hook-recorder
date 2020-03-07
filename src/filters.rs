@@ -45,8 +45,7 @@ fn gen_record_tagged(
     pool: r2d2::Pool<ConnectionManager<PgConnection>>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'static {
     debug!("Initializing record filter");
-    warp::path!("record")
-        .and(warp::path::param())
+    warp::path!("record" / String)
         .and(warp::post())
         .and(warp::body::bytes())
         .and(warp::header::headers_cloned())
