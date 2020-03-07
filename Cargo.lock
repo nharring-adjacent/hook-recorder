@@ -148,6 +148,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmake"
+version = "0.1.42"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81fb25b677f8bf1eb325017cb6bb8452f87969db0fedb4f757b297bee78a7c62"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "crossbeam-epoch"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -524,6 +533,7 @@ dependencies = [
  "log 0.4.8",
  "metrics",
  "metrics-runtime",
+ "mimalloc",
  "mockall",
  "openssl",
  "pretty_env_logger",
@@ -673,6 +683,15 @@ name = "libc"
 version = "0.2.67"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb147597cdf94ed43ab7a9038716637d2d1bf2bc571da995d0028dec06bd3018"
+
+[[package]]
+name = "libmimalloc-sys"
+version = "0.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de00092fc3cd1d1f212487fc4f321728911cd7a0acddab85497429e2b1077459"
+dependencies = [
+ "cmake",
+]
 
 [[package]]
 name = "linked-hash-map"
@@ -862,6 +881,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "mimalloc"
+version = "0.1.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "363fa5a634523c1809e1c076c7818f461f6c61223e5253d1b0c3279db71f7fd7"
+dependencies = [
+ "libmimalloc-sys",
 ]
 
 [[package]]
