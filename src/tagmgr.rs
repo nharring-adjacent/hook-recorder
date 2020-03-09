@@ -9,10 +9,10 @@ use diesel::r2d2::{self, ConnectionManager};
 use log::debug;
 use metrics::{counter, timing};
 use quanta::Clock;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::convert::TryInto;
-use serde::{Deserialize, Serialize};
 use warp::http::StatusCode;
 
 #[derive(Serialize, Deserialize)]
@@ -51,6 +51,15 @@ pub async fn display_tagmgr(
     let html = templater.hb.render("tags", &payload);
     Ok(warp::reply::html(
         html.unwrap_or_else(|err| err.to_string()),
+    ))
+}
+
+pub async fn show_new_tag(templater: Templater) -> Result<impl warp::Reply, Infallible> {
+    Ok(warp::reply::html(
+        templater
+            .hb
+            .render("new_tag", &())
+            .unwrap_or_else(|err| err.to_string()),
     ))
 }
 

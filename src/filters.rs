@@ -15,6 +15,8 @@ pub fn gen_filters(
         .or(gen_healthcheck(pool.clone(), templater.clone()))
         .or(gen_get_tags(pool.clone(), templater.clone()))
         .or(gen_post_tag(pool.clone()))
+        .or(gen_show_new_tag(templater.clone()))
+        .or(gen_post_new_tag(pool.clone()))
         .or(gen_display_by_tag(pool, templater))
 }
 
@@ -46,6 +48,7 @@ fn gen_display_by_tag(
         })
 }
 
+// GET /tags/
 fn gen_get_tags(
     pool: r2d2::Pool<ConnectionManager<PgConnection>>,
     templater: Templater,
@@ -58,6 +61,29 @@ fn gen_get_tags(
         .and_then(tagmgr::display_tagmgr)
 }
 
+// GET /new_tag
+fn gen_show_new_tag(templater: Templater) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'static {
+    debug!("Initializing show_new_tag filter");
+    warp::path!("new_tag")
+    .and(warp::get())
+    .and(with_templater(templater))
+    .and_then(tagmgr::show_new_tag)
+}
+
+// POST /new_tag
+fn gen_post_new_tag(
+    pool: r2d2::Pool<ConnectionManager<PgConnection>>,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'static {
+    debug!("Initializing post_new_tag filter");
+    warp::path!("new_tag")
+        .and(warp::post())
+        .and(warp::body::content_length_limit(1024 * 32))
+        .and(with_db(pool))
+        .and(warp::body::form())
+        .and_then(tagmgr::new_tag)
+}
+
+// POST /tags
 fn gen_post_tag(
     pool: r2d2::Pool<ConnectionManager<PgConnection>>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'static {
@@ -67,7 +93,6 @@ fn gen_post_tag(
         .and(warp::body::content_length_limit(1024 * 32))
         .and(with_db(pool))
         .and(warp::body::form())
-        //.and_then(|pool, body: HashMap<String, String>|tagmgr::new_tag(pool, body))
         .and_then(tagmgr::new_tag)
 }
 
@@ -86,6 +111,7 @@ fn gen_record_tagged(
         })
 }
 
+// GET /healthcheck
 fn gen_healthcheck(
     pool: r2d2::Pool<ConnectionManager<PgConnection>>,
     templater: Templater,

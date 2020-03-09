@@ -1,4 +1,5 @@
 extern crate handlebars;
+use super::model::Tag;
 use chrono::NaiveDateTime;
 use handlebars::{Context, Handlebars, Helper, HelperResult, Output, RenderContext, RenderError};
 use log::debug;
@@ -6,7 +7,6 @@ use rust_embed::RustEmbed;
 use serde_json::Value;
 use std::sync::Arc;
 use std::time::Duration;
-use super::model::Tag;
 
 #[derive(RustEmbed)]
 #[folder = "src/templates/"]
@@ -48,6 +48,12 @@ impl Templater {
                 .expect("Failed to load tags.hbs"),
         )
         .expect("Failed to register tag manager template");
+        reg.register_template_string(
+            "new_tag",
+            std::str::from_utf8(Templates::get("new_tag.hbs").unwrap().as_ref())
+                .expect("Failed to load new_tag.hbs"),
+        )
+        .expect("Failed to register new tag template");
         debug!("Registering template helpers");
         reg.register_helper("duration", Box::new(Templater::duration_helper));
         reg.register_helper("systime", Box::new(Templater::systime_helper));
@@ -106,9 +112,9 @@ impl Templater {
         out: &mut dyn Output,
     ) -> HelperResult {
         let tag_raw = h
-        .param(0)
-        .map(|v| v.value())
-        .ok_or_else(|| RenderError::new("param not found"))?;
+            .param(0)
+            .map(|v| v.value())
+            .ok_or_else(|| RenderError::new("param not found"))?;
         let tag: Tag = serde_json::from_value(tag_raw.clone())?;
         let out_str = Templater::tag_inner(tag)?;
         out.write(&out_str)?;

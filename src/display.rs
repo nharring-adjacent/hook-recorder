@@ -26,7 +26,7 @@ pub async fn display_last(
     let query_start = clock.start();
     let result = webhooks
         .select(super::schema::webhooks::all_columns)
-        .order_by(upload_time.desc())
+        .order_by(id.desc())
         .first::<Webhook>(&pool.get().unwrap())
         .expect("Error fetching most recent webhook");
     timing!(
