@@ -21,6 +21,7 @@ pub mod record;
 pub mod schema;
 pub mod server;
 pub mod templating;
+pub mod tagmgr;
 
 use config::AppConfig;
 use db::DbFacade;

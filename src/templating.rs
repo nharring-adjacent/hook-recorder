@@ -6,6 +6,7 @@ use rust_embed::RustEmbed;
 use serde_json::Value;
 use std::sync::Arc;
 use std::time::Duration;
+use super::model::Tag;
 
 #[derive(RustEmbed)]
 #[folder = "src/templates/"]
@@ -21,22 +22,36 @@ impl Templater {
     pub fn new() -> Templater {
         debug!("Creating template singleton");
         let mut reg = Handlebars::new();
+        debug!("Registering prelude partial template");
+        reg.register_partial(
+            "prelude",
+            std::str::from_utf8(Templates::get("prelude.hbs").unwrap().as_ref())
+                .expect("Failed to load prelude.hbs"),
+        )
+        .expect("Failed to register prelude partial");
         debug!("Registering template files");
         reg.register_template_string(
-            "display.html",
-            std::str::from_utf8(Templates::get("display.html").unwrap().as_ref())
-                .expect("Failed to load display.html"),
+            "display",
+            std::str::from_utf8(Templates::get("display.hbs").unwrap().as_ref())
+                .expect("Failed to load display.hbs"),
         )
         .expect("Failed to register display template");
         reg.register_template_string(
-            "healthcheck.html",
-            std::str::from_utf8(Templates::get("healthcheck.html").unwrap().as_ref())
-                .expect("Failed to load healthcheck.html"),
+            "healthcheck",
+            std::str::from_utf8(Templates::get("healthcheck.hbs").unwrap().as_ref())
+                .expect("Failed to load healthcheck.hbs"),
         )
         .expect("Failed to register healthcheck template");
+        reg.register_template_string(
+            "tags",
+            std::str::from_utf8(Templates::get("tags.hbs").unwrap().as_ref())
+                .expect("Failed to load tags.hbs"),
+        )
+        .expect("Failed to register tag manager template");
         debug!("Registering template helpers");
         reg.register_helper("duration", Box::new(Templater::duration_helper));
         reg.register_helper("systime", Box::new(Templater::systime_helper));
+        reg.register_helper("tag", Box::new(Templater::tag_helper));
         Templater { hb: Arc::new(reg) }
     }
 
@@ -81,6 +96,28 @@ impl Templater {
         let this_duration: Duration = serde_json::from_value(d.clone()).unwrap();
         let this_in_sec = this_duration.as_secs();
         Ok(this_in_sec.to_string())
+    }
+
+    fn tag_helper(
+        h: &Helper,
+        _: &Handlebars,
+        _: &Context,
+        _rc: &mut RenderContext,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let tag_raw = h
+        .param(0)
+        .map(|v| v.value())
+        .ok_or_else(|| RenderError::new("param not found"))?;
+        let tag: Tag = serde_json::from_value(tag_raw.clone())?;
+        let out_str = Templater::tag_inner(tag)?;
+        out.write(&out_str)?;
+        Ok(())
+    }
+
+    fn tag_inner(t: Tag) -> Result<String, RenderError> {
+        let out_str = serde_json::to_string_pretty::<Tag>(&t)?;
+        Ok(out_str)
     }
 }
 #[cfg(test)]

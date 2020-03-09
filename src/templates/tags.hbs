@@ -1,0 +1,26 @@
+{{~>prelude}}
+<title>Tag manager</title>
+</head>
+
+<body>
+    {{#if (gt tag_count 0)}}
+    {{#each tags as |this_tag|}}
+    <p>{{tag this_tag}}</p>
+    {{/each}}
+    {{else}}
+    <form method="POST" enctype="application/x-www-form-urlencoded">
+        <p>No tags have been defined yet, use the form to create one</p>
+        <div class="field">
+            <label class="label">Desired tag:</label>
+            <div class="control">
+                <input class="input" type="text" name="tag" placeholder="This string will go after /record/">
+            </div>
+            <div class="control">
+                <input class="button" type="submit" value="Reserve tag">
+            </div>
+        </div>
+    </form>
+    {{/if}}
+</body>
+
+</html>

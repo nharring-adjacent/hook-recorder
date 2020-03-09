@@ -37,7 +37,7 @@ pub async fn healthcheck(
     );
     counter!("healthcheck.db_state.conns", payload.conns.into());
     counter!("healthcheck.db_state.idle_conns", payload.idle_conns.into());
-    let html = templater.hb.render("healthcheck.html", &payload);
+    let html = templater.hb.render("healthcheck", &payload);
     Ok(warp::reply::html(
         html.unwrap_or_else(|err| err.to_string()),
     ))
